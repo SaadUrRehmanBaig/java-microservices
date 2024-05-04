@@ -1,12 +1,14 @@
 package com.lcwd.user.service.userservice.services.impl;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.lcwd.user.service.userservice.dto.UserSaveDto;
 import com.lcwd.user.service.userservice.entities.User;
 import com.lcwd.user.service.userservice.exceptions.ResourceNotFoundException;
 import com.lcwd.user.service.userservice.repositories.UserRepo;
@@ -31,8 +33,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User saveUser(User user) {
-        return userRepo.save(user);
+    public User saveUser(UserSaveDto user) {
+        User newUser = new User();
+        modelMapper.map(user, newUser);
+        newUser.setUserId(UUID.randomUUID().toString());
+        return userRepo.save(newUser);
     }
 
     @Override

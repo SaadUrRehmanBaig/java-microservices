@@ -23,12 +23,12 @@ public class UserController {
     @Autowired
     UserServiceImpl userService;
 
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<User> createUser(@Valid @RequestBody UserSaveDto user) {
         return ResponseEntity.ok(userService.saveUser(user));
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     List<User> getAllUsers() {
         return userService.getAllUser();
     }
