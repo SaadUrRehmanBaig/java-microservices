@@ -2,15 +2,22 @@ package com.lcwd.user.service.userservice.services.impl;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.lcwd.user.service.userservice.dto.UserSaveDto;
+import com.lcwd.user.service.userservice.entities.Hotel;
+import com.lcwd.user.service.userservice.entities.Rating;
 import com.lcwd.user.service.userservice.entities.User;
 import com.lcwd.user.service.userservice.exceptions.ResourceNotFoundException;
+import com.lcwd.user.service.userservice.externals.HotelService;
+import com.lcwd.user.service.userservice.externals.RatingService;
 import com.lcwd.user.service.userservice.repositories.UserRepo;
 import com.lcwd.user.service.userservice.services.UserService;
 
@@ -18,11 +25,17 @@ import com.lcwd.user.service.userservice.services.UserService;
 public class UserServiceImpl implements UserService {
     private UserRepo userRepo;
     private ModelMapper modelMapper;
+    private HotelService hotelService;
+    private RatingService ratingService;
+    private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired
-    UserServiceImpl(ModelMapper modelMapper, UserRepo userRepo) {
+    UserServiceImpl(ModelMapper modelMapper, UserRepo userRepo, HotelService hotelService,
+            RatingService ratingService) {
         this.modelMapper = modelMapper;
         this.userRepo = userRepo;
+        this.hotelService = hotelService;
+        this.ratingService = ratingService;
         PropertyMap<User, User> propertyMap = new PropertyMap<User, User>() {
             protected void configure() {
                 skip().setUserId(null);
@@ -42,12 +55,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUser() {
-        return userRepo.findAll();
+        List<User> users = userRepo.findAll();
+        return users.stream().map(user -> {
+            List<Rating> ratings = this.ratingService.getRatingsByUserId(user.getUserId()).getData();
+            List<Rating> ratingList = ratings.stream().map((rating) -> {
+                rating.setHotel(this.hotelService.getHotelById(rating.getHotelId()).getData());
+                return rating;
+            }).collect(Collectors.toList());
+
+            user.setRatings(ratingList);
+            return user;
+        }).toList();
     }
 
     @Override
     public User getUser(String userId) {
-        return userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user not found"));
+        User user = userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("user not found"));
+        List<Rating> ratings = this.ratingService.getRatingsByUserId(user.getUserId()).getData();
+        List<Rating> ratingList = ratings.stream().map((rating) -> {
+            rating.setHotel(this.hotelService.getHotelById(rating.getHotelId()).getData());
+            return rating;
+        }).collect(Collectors.toList());
+
+        user.setRatings(ratingList);
+        return user;
     }
 
     @Override
