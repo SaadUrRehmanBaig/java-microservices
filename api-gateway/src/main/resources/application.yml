@@ -21,6 +21,6 @@ spring:
         - id: rating-service
           uri: lb://RATING-SERVICE
           predicates:
-            - Path=/RATING/**
+            - Path=/rating/**
       default-filters:
         - PrefixPath=/api
