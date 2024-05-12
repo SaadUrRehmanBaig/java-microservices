@@ -7,6 +7,22 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/java-microservice
+          jwk-set-uri: http://localhost:8080/realms/java-microservice/protocol/openid-connect/certs
+      client:
+        provider:
+          external:
+            issuer-uri: http://localhost:8080/realms/java-microservice
+        registration:
+          external:
+            client-id: randomId
+            client-secret: TwJksiuEcWIB8VFGigAXXpfh5FAszjAm
+            authorization-grant-type: password
+            scope: openid
   cloud:
     gateway:
       routes:
